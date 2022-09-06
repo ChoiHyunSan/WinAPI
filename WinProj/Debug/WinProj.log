@@ -1,0 +1,2 @@
+﻿  HelloSDK.cpp
+C:\Users\B409_14\Desktop\Computer-Graphics-2\WinAPI\WinProj\HelloSDK.cpp(95): error C4700: 초기화되지 않은 'hdc' 지역 변수를 사용했습니다.
