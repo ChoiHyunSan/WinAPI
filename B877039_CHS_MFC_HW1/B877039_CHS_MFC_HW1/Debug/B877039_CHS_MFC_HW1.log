@@ -1,0 +1,5 @@
+﻿  ChildView.cpp
+C:\Users\chsan\source\repos\B877039_CHS_MFC_HW1\B877039_CHS_MFC_HW1\ChildView.cpp(121,33): warning C4227: 오래된 구문을 사용했습니다. 참조의 한정자가 무시됩니다.
+  MainFrm.cpp
+  코드를 생성하고 있습니다...
+  B877039_CHS_MFC_HW1.vcxproj -> C:\Users\chsan\source\repos\B877039_CHS_MFC_HW1\Debug\B877039_CHS_MFC_HW1.exe
