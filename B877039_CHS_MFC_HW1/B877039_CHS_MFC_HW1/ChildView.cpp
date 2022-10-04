@@ -98,6 +98,23 @@ void CChildView::setPen(HDC dc, PEN_TYPE type)
 void CChildView::setBrush(HDC dc, BRUSH_TYPE type)
 {
 	// 비트맵 그리고 추가할 예정
+	HBRUSH brush = CreateSolidBrush(RGB(0, 0, 0));
+
+	CBitmap bitmap;
+	bitmap.LoadBitmap(IDB_BITMAP1);
+
+	switch (type)
+	{
+	case BRUSH_TYPE::SINGLE:
+		brush = CreateSolidBrush(RGB(255, 0, 0));
+		break;
+	case BRUSH_TYPE::OBITMAP:
+		brush = CreatePatternBrush(bitmap);
+		break;
+	}
+
+	HBRUSH prevBrush = (HBRUSH)SelectObject(dc, brush);
+	DeleteObject(prevBrush);
 }
 
 BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
@@ -154,7 +171,11 @@ void CChildView::OnPaint()
 	}
 	if (isRMouseDown)
 	{
-
+		Rectangle(dc,
+			tempShape.ltPos.x,
+			tempShape.ltPos.y,
+			tempShape.rbPos.x,
+			tempShape.rbPos.y);
 	}
 	if (isMMouseDown)
 	{
@@ -218,7 +239,7 @@ void CChildView::OnRButtonDown(UINT nFlags, CPoint point)
 void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-	isLMouseDown = false;
+	isRMouseDown = false;
 
 	setRbPos(point);
 	addObject(SHAPE_TYPE::ELLIPSE);

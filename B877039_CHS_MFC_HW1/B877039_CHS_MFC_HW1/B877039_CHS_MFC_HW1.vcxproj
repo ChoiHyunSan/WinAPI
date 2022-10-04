@@ -210,6 +210,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\B877039_CHS_MFC_HW1.ico" />
+    <Image Include="res\bitmap1.bmp" />
     <Image Include="res\Toolbar.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -8,7 +8,6 @@ using std::vector;
 #pragma once
 // CChildView 창
 
-
 // 질문 사항 혹은 궁금한 사항
 // 1. 사각형과 원을 그리는 기능이 동시에 실행되지 않게끔 조절?	
 // 2. 배열 대신 vector 컨테이너를 사용해도 되는가?
@@ -46,7 +45,6 @@ struct Shape
 	CPoint rbPos;	// 우하단
 	
 	SHAPE_TYPE type;	// 도형의 타입
-
 	Shape() :
 		ltPos(CPoint(0,0)),
 		rbPos(CPoint(0, 0))
@@ -80,6 +78,7 @@ private:
 	bool isRMouseDown;
 	bool isMMouseDown;
 
+	HINSTANCE Instance;
 private:
 	void setRbPos(CPoint point);
 	void setLtPos(CPoint point);
