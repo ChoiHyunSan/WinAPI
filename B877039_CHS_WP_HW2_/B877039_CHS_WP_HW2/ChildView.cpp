@@ -222,7 +222,8 @@ void CChildView::OnMoveEraser()
 	if (isEraserMove) 
 	{ 
 		isEraserMove = false; 
-
+		m_dtX = 0.f;
+		m_dtY = 0.f;
 	}
 	else 
 	{ 
@@ -437,6 +438,8 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 
 	if (nIDEvent == 0)
 	{
+		if (!isEraserMove) return;
+
 		CRect rect;
 		GetClientRect(rect);
 
