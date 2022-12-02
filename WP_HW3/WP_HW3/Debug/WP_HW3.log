@@ -1,0 +1,4 @@
+﻿  ChildView.cpp
+C:\Users\최현산\Desktop\WP_HW3\WP_HW3\ChildView.cpp(111,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\최현산\Desktop\WP_HW3\WP_HW3\ChildView.cpp(129,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  WP_HW3.vcxproj -> C:\Users\최현산\Desktop\WP_HW3\Debug\WP_HW3.exe
