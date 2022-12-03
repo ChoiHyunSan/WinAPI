@@ -43,6 +43,9 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_UPDATE_COMMAND_UI(ID_REPLAY, &CChildView::OnUpdateReplay)
 	ON_COMMAND(ID_STOP, &CChildView::OnStop)
 	ON_UPDATE_COMMAND_UI(ID_STOP, &CChildView::OnUpdateStop)
+	ON_WM_TIMER()
+	ON_WM_VSCROLL()
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -118,16 +121,27 @@ void CChildView::OnPaint()
 	// 도형을 그린다. * Replay시에는 그리지 않는다.
 	if (!isReplay)
 	{
-		// 검정색 브러시를 선택하여 그린다.
-		color = RGB(0, 0, 0);
-		HPEN pen = CreatePen(PS_SOLID, 5, color);
-		memDC.SelectObject(pen);
 
 		if (shapes.empty()) return;
 
 		// 마지막을 제외한 도형들을 그린다.
-		for (int i = 0; i < shapes.size() - 1; i++)
+		for (int i = 0; i < shapes.size(); i++)
 		{
+			if (i != selectIndex)
+			{
+				// 검정색 브러시를 선택하여 그린다.
+				color = RGB(0, 0, 0);
+				HPEN pen = CreatePen(PS_SOLID, 5, color);
+				memDC.SelectObject(pen);
+			}
+			else
+			{
+				color = RGB(255, 0, 0);
+				HPEN pen = CreatePen(PS_SOLID, 5, color);
+				memDC.SelectObject(pen);
+			}
+
+
 			if (shapes[i].type == TYPE::RECT)
 			{
 				Rectangle(memDC,
@@ -147,35 +161,56 @@ void CChildView::OnPaint()
 				);
 			}
 		}
-		// 마지막 도형을 빨간색으로 칠해서 그린다.
-		if (!shapes.empty())
-		{
-			color = RGB(255, 0, 0);
-			HPEN pen = CreatePen(PS_SOLID, 5, color);
-			memDC.SelectObject(pen);
+		//else
+		//{
+		//	// 마지막 도형을 빨간색으로 칠해서 그린다.
+		//	if (!shapes.empty())
+		//	{
+		//		color = RGB(255, 0, 0);
+		//		HPEN pen = CreatePen(PS_SOLID, 5, color);
+		//		memDC.SelectObject(pen);
 
-			int index = shapes.size() - 1;
+		//		int index = shapes.size() - 1;
 
-			if (shapes[index].type == TYPE::RECT)
-			{
-				Rectangle(memDC,
-					shapes[index].pos.x - 40,
-					shapes[index].pos.y - 40,
-					shapes[index].pos.x + 40,
-					shapes[index].pos.y + 40
-				);
-			}
-			else if (shapes[index].type == TYPE::CIRCLE)
-			{
-				Ellipse(memDC,
-					shapes[index].pos.x - 40,
-					shapes[index].pos.y - 40,
-					shapes[index].pos.x + 40,
-					shapes[index].pos.y + 40
-				);
-			}
-		}
+		//		if (shapes[index].type == TYPE::RECT)
+		//		{
+		//			Rectangle(memDC,
+		//				shapes[index].pos.x - 40,
+		//				shapes[index].pos.y - 40,
+		//				shapes[index].pos.x + 40,
+		//				shapes[index].pos.y + 40
+		//			);
+		//		}
+		//		else if (shapes[index].type == TYPE::CIRCLE)
+		//		{
+		//			Ellipse(memDC,
+		//				shapes[index].pos.x - 40,
+		//				shapes[index].pos.y - 40,
+		//				shapes[index].pos.x + 40,
+		//				shapes[index].pos.y + 40
+		//			);
+		//		}
+		//	}
+
 	}
+	// RePlay 모드 시, 실선을 따라 사각형이 움직인다.
+	else
+	{
+		color = RGB(0, 0, 0);
+		HPEN pen = CreatePen(PS_SOLID, 2, color);
+		memDC.SelectObject(pen);
+
+		RoundRect(memDC,
+			ReplayPos.x - 40,
+			ReplayPos.y - 40,
+			ReplayPos.x + 40,
+			ReplayPos.y + 40,
+			ratioOfRect,
+			ratioOfRect
+			);
+
+	}
+
 
 	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 }
@@ -183,9 +218,14 @@ void CChildView::OnPaint()
 
 void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
+	if (isReplay) return;
+
 	Shape shape(point, TYPE::RECT);
 	shapes.push_back(shape);
 
+	selectIndex = shapes.size() - 1;
+	scrollBar.SetScrollRange(0, shapes.size()-1);
+	scrollBar.SetScrollPos(shapes.size() - 1);
 	CWnd::OnLButtonDown(nFlags, point);
 	Invalidate();
 }
@@ -193,9 +233,14 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CChildView::OnRButtonDown(UINT nFlags, CPoint point)
 {
+	if (isReplay) return;
+
 	Shape shape(point, TYPE::CIRCLE);
 	shapes.push_back(shape);
 
+	selectIndex = shapes.size() - 1;
+	scrollBar.SetScrollRange(0, shapes.size()-1);
+	scrollBar.SetScrollPos(shapes.size() - 1);
 	CWnd::OnRButtonDown(nFlags, point);
 	Invalidate();
 }
@@ -223,6 +268,14 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	stopButton.Create(_T("STOP"),
 		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(400, 0, 500, 30), this, ID_STOP);
 
+	scrollBar.Create(SBS_HORZ, CRect(500,0,1000,30),this, ID_SCROLLBAR);
+
+	scrollBar.ShowWindow(true);
+	scrollBar.SetScrollRange(0, 0);
+	scrollBar.SetScrollPos(0);
+
+	SetTimer(0, 50, NULL);
+
 	return 0;
 }
 
@@ -231,6 +284,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CChildView::OnClear()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+	if (isReplay) return;
 
 	shapes.clear();
 
@@ -249,6 +303,8 @@ void CChildView::OnUpdateClear(CCmdUI* pCmdUI)
 
 void CChildView::OnSave()
 {
+	if (isReplay) return;
+
 	CFile file(_T("circle.dat"), CFile::modeWrite | CFile::modeCreate);
 
 	CArchive ar(&file, CArchive::store);
@@ -279,6 +335,8 @@ void CChildView::OnUpdateSave(CCmdUI* pCmdUI)
 
 void CChildView::OnLoad()
 {
+	if (isReplay) return;
+
 	CFile file(_T("circle.dat"), CFile::modeRead);
 
 	shapes.clear();
@@ -315,18 +373,40 @@ void CChildView::OnUpdateLoad(CCmdUI* pCmdUI)
 
 void CChildView::OnReplay()
 {
-	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	if (isReplay == true)
+	// Replay 모드를 활성화시킨다.
+	isReplay = true;
+
+	// 실선의 처음 부분부터 이동하게끔 만든다.
+
+	if (shapes.empty()) return;
+
+	curIndex = 0;
+	ReplayPos = shapes[0].pos;
+
+	curPos = shapes[0].pos;
+	scrollBar.SetScrollPos(0);
+
+	if (shapes[0].type == TYPE::RECT)
 	{
-		isReplay = true;
+		isChangeToRect = false;
+		ratioOfRect = 0.f;
 	}
 	else
 	{
-		isReplay = false;
+		isChangeToRect = true;
+		ratioOfRect = 80.f;
 	}
 
-
-
+	if (shapes.size() == 1)
+	{
+		nextPos = shapes[0].pos;
+	}
+	else
+	{
+		nextPos = shapes[1].pos;
+	}
+	count = 0;
+	Invalidate();
 }
 
 
@@ -338,11 +418,175 @@ void CChildView::OnUpdateReplay(CCmdUI* pCmdUI)
 
 void CChildView::OnStop()
 {
-	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+	// Replay 모드를 비활성화 시킨다.
+	isReplay = false;
+	
+	scrollBar.SetScrollPos(selectIndex);
+
+	Invalidate();
 }
 
 
 void CChildView::OnUpdateStop(CCmdUI* pCmdUI)
 {
 	// TODO: 여기에 명령 업데이트 UI 처리기 코드를 추가합니다.
+
+}
+
+
+void CChildView::OnTimer(UINT_PTR nIDEvent)
+{
+
+	if (nIDEvent == 0 && isReplay == true)
+	{
+		if(count == 14)
+		{
+			if (curIndex == shapes.size() - 2)
+			{
+				curIndex = 0;
+				
+				if (shapes[curIndex].type == TYPE::RECT)
+				{
+					ratioOfRect = 0.f;
+				}
+				else
+				{
+					ratioOfRect = 80.f;
+				}
+
+				if (shapes[curIndex].type == TYPE::RECT)
+				{
+					isChangeToRect = true;
+				}
+				else
+				{
+					isChangeToRect = false;
+				}
+			}
+			else
+			{
+				curIndex++;
+
+				if (shapes[curIndex].type == TYPE::RECT)
+				{
+					isChangeToRect = true;
+				}
+				else
+				{
+					isChangeToRect = false;
+				}
+
+			}
+			ReplayPos = shapes[curIndex].pos;
+			scrollBar.SetScrollPos(curIndex);
+			count = 0;
+		}
+
+		if (shapes.empty()) return;
+
+		if (shapes.size() != 1)
+		{
+			curPos = shapes[curIndex].pos;
+			nextPos = shapes[curIndex + 1].pos;
+		}
+		// 거리에 비례해서 이동 속도를 조절한다.
+		dx = (nextPos.x - curPos.x);
+		dy = (nextPos.y - curPos.y);
+
+		ReplayPos.x += dx / 15;
+		ReplayPos.y += dy / 15;
+
+		// 현재 타입과 다음 타입이 같지 않다면 모양을 변경한다.
+		if (shapes.size() != 1 
+			&& shapes[curIndex].type != shapes[curIndex+1].type)
+		{
+			if (isChangeToRect)
+			{
+				ratioOfRect -= 80 / 15.f;
+			}
+			else
+			{
+				ratioOfRect += 80 / 15.f;
+			}
+		}
+
+		count++;
+		Invalidate();
+	}
+
+	CWnd::OnTimer(nIDEvent);
+}
+
+void CChildView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+
+
+
+
+
+	CWnd::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CChildView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+
+	if (pScrollBar != NULL) {
+		if (nSBCode == SB_THUMBTRACK || nSBCode == SB_THUMBPOSITION
+			&& !isReplay) {
+			selectIndex = nPos;
+			pScrollBar->SetScrollPos(nPos);
+		}
+
+		if (nSBCode == SB_LINELEFT)
+		{
+			if (!isReplay)
+			{
+				if (selectIndex != 0)
+				{
+					selectIndex--;
+				}
+				pScrollBar->SetScrollPos(selectIndex);
+			}
+			else
+			{
+				if (curIndex != 0)
+				{
+					curIndex--;
+				}
+
+				pScrollBar->SetScrollPos(curIndex);
+				ReplayPos = shapes[curIndex].pos;
+				count == 0;
+			}
+		}
+		else if (nSBCode == SB_LINERIGHT)
+		{
+			if (!isReplay)
+			{
+				if (selectIndex != shapes.size() - 1)
+				{
+					selectIndex++;
+				}
+				pScrollBar->SetScrollPos(selectIndex);
+			}
+			else
+			{
+				if (curIndex != shapes.size() - 1)
+				{
+					curIndex++;
+				}
+				ReplayPos = shapes[curIndex].pos;
+				count == 0;
+				pScrollBar->SetScrollPos(curIndex);
+			}
+
+		}
+	}
+
+	Invalidate();
+
+	CWnd::OnHScroll(nSBCode, nPos, pScrollBar);
 }

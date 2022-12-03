@@ -57,7 +57,24 @@ protected:
 	CButton loadButton;
 	CButton replayButton;
 	CButton stopButton;
+	CScrollBar scrollBar;
 
+	// Replay 모드를 위한 변수
+	int curIndex;
+	CPoint curPos;
+	CPoint nextPos;
+
+	CPoint ReplayPos;
+
+	float dx;
+	float dy;
+
+	bool isChangeToRect;
+	float ratioOfRect;
+	
+	int count = 0;
+
+	int selectIndex = 0;
 	// 구현입니다.
 public:
 	virtual ~CChildView();
@@ -82,5 +99,8 @@ public:
 	afx_msg void OnUpdateReplay(CCmdUI* pCmdUI);
 	afx_msg void OnStop();
 	afx_msg void OnUpdateStop(CCmdUI* pCmdUI);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };
 

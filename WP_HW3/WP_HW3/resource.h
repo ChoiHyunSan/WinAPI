@@ -10,6 +10,7 @@
 #define ID_LOAD                         32773
 #define ID_REPLAY                       32774
 #define ID_STOP                         32775
+#define ID_SCROLLBAR					33333
 
 // Next default values for new objects
 // 
